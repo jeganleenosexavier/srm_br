@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("viewer")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  stageHistories StageHistory[]
+
+  @@map("users")
+}
+
+model Person {
+  id               String   @id @default(cuid())
+  name             String
+  email            String   @unique
+  type             String
+  region           String
+  stage            String   @default("applied")
+  mentorId         String?  @map("mentor_id")
+  projectId        String?  @map("project_id")
+  riskLevel        String   @default("green") @map("risk_level")
+  complianceStatus String   @default("green") @map("compliance_status")
+  careerPath       String?  @map("career_path")
+  tenureMonths     Int?     @map("tenure_months")
+  payBand          String?  @map("pay_band")
+  colAdjustedBand  String?  @map("col_adjusted_band")
+  payEquityStatus  String?  @map("pay_equity_status")
+  exitReason       String?  @map("exit_reason")
+  preferredLang    String?  @map("preferred_language")
+  startDate        DateTime @default(now()) @map("start_date")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  mentor         Person?          @relation("MentorMentees", fields: [mentorId], references: [id])
+  mentees        Person[]         @relation("MentorMentees")
+  project        Project?         @relation(fields: [projectId], references: [id])
+  skills         PersonSkill[]
+  reviewsReceived Review[]        @relation("ReviewSubject")
+  reviewsGiven    Review[]        @relation("ReviewMentor")
+  complianceItems ComplianceItem[]
+  stageHistories  StageHistory[]
+
+  @@map("persons")
+}
+
+model Skill {
+  id          String @id @default(cuid())
+  name        String @unique
+  category    String
+  demandLevel String @default("medium") @map("demand_level")
+
+  personSkills PersonSkill[]
+  roleSkills   RoleSkill[]
+
+  @@map("skills")
+}
+
+model PersonSkill {
+  id          String    @id @default(cuid())
+  personId    String    @map("person_id")
+  skillId     String    @map("skill_id")
+  proficiency String    @default("beginner")
+  certName    String?   @map("cert_name")
+  certExpiry  DateTime? @map("cert_expiry")
+  lastUpdated DateTime  @default(now()) @map("last_updated")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  skill  Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, skillId])
+  @@map("person_skills")
+}
+
+model Role {
+  id   String @id @default(cuid())
+  name String @unique
+
+  requiredSkills RoleSkill[]
+
+  @@map("roles")
+}
+
+model RoleSkill {
+  id              String @id @default(cuid())
+  roleId          String @map("role_id")
+  skillId         String @map("skill_id")
+  minimumLevel    String @default("intermediate") @map("minimum_level")
+
+  role  Role  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  skill Skill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, skillId])
+  @@map("role_skills")
+}
+
+model Project {
+  id     String @id @default(cuid())
+  name   String
+  domain String
+  region String
+
+  persons Person[]
+
+  @@map("projects")
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  personId        String   @map("person_id")
+  mentorId        String   @map("mentor_id")
+  date            DateTime @default(now())
+  technical       Float?
+  communication   Float?
+  learningAgility Float?   @map("learning_agility")
+  notes           String?
+  recommendation  String?
+
+  person Person @relation("ReviewSubject", fields: [personId], references: [id], onDelete: Cascade)
+  mentor Person @relation("ReviewMentor", fields: [mentorId], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+model ComplianceItem {
+  id         String    @id @default(cuid())
+  personId   String    @map("person_id")
+  itemType   String    @map("item_type")
+  status     String    @default("pending")
+  expiryDate DateTime? @map("expiry_date")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, itemType])
+  @@map("compliance_items")
+}
+
+model Country {
+  code                    String  @id
+  name                    String
+  currency                String
+  timezone                String
+  benefitsSummary         String? @map("benefits_summary")
+  hubRole                 String? @map("hub_role")
+  overlapHoursRecommended String? @map("overlap_hours_recommended")
+  playbookUrl             String? @map("playbook_url")
+  hrContactName           String? @map("hr_contact_name")
+  hrContactEmail          String? @map("hr_contact_email")
+
+  @@map("countries")
+}
+
+model StageHistory {
+  id        String   @id @default(cuid())
+  personId  String   @map("person_id")
+  stage     String
+  timestamp DateTime @default(now())
+  userId    String   @map("user_id")
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("stage_histories")
+}

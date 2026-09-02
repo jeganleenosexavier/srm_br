@@ -79,14 +79,19 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-secondary)]">
+    <div className="flex flex-col min-h-screen bg-[var(--bg-secondary)]">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       <TopBar user={user} sidebarCollapsed={sidebarCollapsed} />
-      <main className={`mt-14 p-6 transition-all duration-200 ${
+      <main className={`flex-1 mt-14 p-6 transition-all duration-200 ${
         sidebarCollapsed ? 'ml-16' : 'ml-60'
       }`}>
         {children}
       </main>
+      <footer className={`py-4 px-6 text-center text-xs text-[var(--text-muted)] border-t border-[var(--border)] transition-all duration-200 ${
+        sidebarCollapsed ? 'ml-16' : 'ml-60'
+      }`}>
+        Jegan L &middot; leslyjegan@gmail.com
+      </footer>
     </div>
   );
 }

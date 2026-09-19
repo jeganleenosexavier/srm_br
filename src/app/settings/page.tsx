@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [role, setRole] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -27,8 +29,12 @@ export default function SettingsPage() {
       if (res.ok) {
         setResult({
           success: true,
-          message: `Seed data loaded: ${data.counts.people} people, ${data.counts.skills} skills, ${data.counts.projects} projects, ${data.counts.countries} countries.`,
+          message: `Seed data loaded: ${data.counts.people} people, ${data.counts.skills} skills, ${data.counts.projects} projects, ${data.counts.countries} countries. Redirecting to login...`,
         });
+        setTimeout(() => {
+          router.push('/login');
+          router.refresh();
+        }, 2000);
       } else {
         setResult({ success: false, message: data.error || 'Failed to load seed data' });
       }

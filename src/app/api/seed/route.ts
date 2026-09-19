@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
+import { headers, cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { recalculateAllRisks } from '@/services/risk.engine';
@@ -248,6 +248,10 @@ export async function POST() {
       roles: rolesCreated.length,
       users: users.length,
     };
+
+    // Clear the current session since user IDs have changed
+    const cookieStore = await cookies();
+    cookieStore.delete('token');
 
     return NextResponse.json({ success: true, counts });
   } catch (err) {

@@ -8,8 +8,8 @@ export async function POST(request: Request) {
   const role = headersList.get('x-user-role');
   const userId = headersList.get('x-user-id')!;
 
-  if (role === 'viewer') {
-    return NextResponse.json({ error: 'Viewers cannot modify pipeline' }, { status: 403 });
+  if (role === 'intern') {
+    return NextResponse.json({ error: 'Interns cannot modify pipeline' }, { status: 403 });
   }
 
   try {

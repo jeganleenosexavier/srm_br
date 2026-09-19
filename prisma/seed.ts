@@ -44,7 +44,7 @@ async function seedUsers() {
   const accounts = [
     { email: 'admin@beauroi.demo', password: 'admin123', role: 'admin' },
     { email: 'mentor@beauroi.demo', password: 'mentor123', role: 'mentor' },
-    { email: 'viewer@beauroi.demo', password: 'viewer123', role: 'viewer' },
+    { email: 'intern@beauroi.demo', password: 'intern123', role: 'intern' },
   ];
 
   const created = [];

@@ -65,7 +65,7 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
   const [person, setPerson] = useState<PersonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pipeline');
-  const [role, setRole] = useState('viewer');
+  const [role, setRole] = useState('intern');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [stageConfirm, setStageConfirm] = useState<string | null>(null);
   const [exitReasonModal, setExitReasonModal] = useState(false);
@@ -99,7 +99,7 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     fetchPerson();
     fetchRisk();
-    fetch('/api/auth/me').then(r => r.json()).then(d => setRole(d.user?.role || 'viewer'));
+    fetch('/api/auth/me').then(r => r.json()).then(d => setRole(d.user?.role || 'intern'));
   }, [fetchPerson, fetchRisk]);
 
   const handleStageChange = async (newStage: string, reason?: string) => {

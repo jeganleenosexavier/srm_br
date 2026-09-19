@@ -102,7 +102,7 @@ export default function LoginPage() {
               {[
                 { label: 'Admin', email: 'admin@beauroi.demo', pw: 'admin123' },
                 { label: 'Mentor', email: 'mentor@beauroi.demo', pw: 'mentor123' },
-                { label: 'Viewer', email: 'viewer@beauroi.demo', pw: 'viewer123' },
+                { label: 'Intern', email: 'intern@beauroi.demo', pw: 'intern123' },
               ].map((account) => (
                 <button
                   key={account.email}

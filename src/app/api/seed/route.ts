@@ -31,7 +31,7 @@ export async function POST() {
     for (const a of [
       { email: 'admin@beauroi.demo', password: 'admin123', role: 'admin' },
       { email: 'mentor@beauroi.demo', password: 'mentor123', role: 'mentor' },
-      { email: 'viewer@beauroi.demo', password: 'viewer123', role: 'viewer' },
+      { email: 'intern@beauroi.demo', password: 'intern123', role: 'intern' },
     ]) {
       users.push(await prisma.user.create({
         data: { email: a.email, passwordHash: await bcrypt.hash(a.password, 10), role: a.role },

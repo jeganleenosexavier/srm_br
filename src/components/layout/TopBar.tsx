@@ -11,7 +11,7 @@ interface TopBarProps {
 const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-[var(--accent)] text-[var(--primary)]',
   mentor: 'bg-blue-100 text-blue-800',
-  viewer: 'bg-gray-100 text-gray-700',
+  intern: 'bg-green-100 text-green-800',
 };
 
 export default function TopBar({ user, sidebarCollapsed }: TopBarProps) {
@@ -36,7 +36,7 @@ export default function TopBar({ user, sidebarCollapsed }: TopBarProps) {
           <span className="text-sm text-gray-600 hidden sm:inline">{user.email}</span>
           <span
             className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
-              ROLE_COLORS[user.role] || ROLE_COLORS.viewer
+              ROLE_COLORS[user.role] || ROLE_COLORS.intern
             }`}
           >
             {user.role}

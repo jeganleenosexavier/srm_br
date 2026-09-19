@@ -11,7 +11,7 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String   @map("password_hash")
-  role         String   @default("viewer")
+  role         String   @default("intern")
   createdAt    DateTime @default(now()) @map("created_at")
 
   stageHistories StageHistory[]

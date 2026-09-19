@@ -93,8 +93,8 @@ async function runTests() {
   const mentorAuth = await login('mentor@beauroi.demo', 'mentor123');
   assert('Mentor login succeeds', mentorAuth.user?.role === 'mentor');
 
-  const viewerAuth = await login('viewer@beauroi.demo', 'viewer123');
-  assert('Viewer login succeeds', viewerAuth.user?.role === 'viewer');
+  const internAuth = await login('intern@beauroi.demo', 'intern123');
+  assert('Intern login succeeds', internAuth.user?.role === 'intern');
 
   cookies = adminAuth.cookies;
 
@@ -182,11 +182,11 @@ async function runTests() {
 
   const james = people.data?.find((p: any) => p.name === 'James Okonkwo');
 
-  // Viewer cannot transition
-  cookies = viewerAuth.cookies;
+  // Intern cannot transition
+  cookies = internAuth.cookies;
   if (james) {
-    const viewerTransition = await apiPost('/api/pipeline/transition', { personId: james.id, newStage: 'training' });
-    assert('Viewer cannot transition stages', viewerTransition.status === 403);
+    const internTransition = await apiPost('/api/pipeline/transition', { personId: james.id, newStage: 'training' });
+    assert('Intern cannot transition stages', internTransition.status === 403);
   }
   cookies = adminAuth.cookies;
 
@@ -268,11 +268,11 @@ async function runTests() {
     assert('Admin can recalculate risk', recalc.status === 200 && recalc.data?.level);
   }
 
-  // Viewer cannot recalculate
-  cookies = viewerAuth.cookies;
+  // Intern cannot recalculate
+  cookies = internAuth.cookies;
   if (james) {
-    const viewerRecalc = await apiPost(`/api/people/${james.id}/risk/recalculate`, {});
-    assert('Viewer cannot recalculate risk', viewerRecalc.status === 403);
+    const internRecalc = await apiPost(`/api/people/${james.id}/risk/recalculate`, {});
+    assert('Intern cannot recalculate risk', internRecalc.status === 403);
   }
   cookies = adminAuth.cookies;
 
@@ -443,20 +443,20 @@ async function runTests() {
   section('Access Control');
   // ────────────────────────────────────────────────────
 
-  cookies = viewerAuth.cookies;
-  const viewerPeople = await api('/api/people');
-  assert('Viewer can read people', viewerPeople.status === 200);
+  cookies = internAuth.cookies;
+  const internPeople = await api('/api/people');
+  assert('Intern can read people', internPeople.status === 200);
 
-  const viewerDashboard = await api('/api/dashboard');
-  assert('Viewer can read dashboard', viewerDashboard.status === 200);
+  const internDashboard = await api('/api/dashboard');
+  assert('Intern can read dashboard', internDashboard.status === 200);
 
-  const viewerCreate = await apiPost('/api/people', {
+  const internCreate = await apiPost('/api/people', {
     name: 'Should Fail', email: 'fail@test.com', type: 'intern', region: 'IN',
   });
-  assert('Viewer cannot create people', viewerCreate.status === 403);
+  assert('Intern cannot create people', internCreate.status === 403);
 
-  const viewerSeed = await apiPost('/api/seed', {});
-  assert('Viewer cannot seed data', viewerSeed.status === 403);
+  const internSeed = await apiPost('/api/seed', {});
+  assert('Intern cannot seed data', internSeed.status === 403);
 
   cookies = adminAuth.cookies;
 

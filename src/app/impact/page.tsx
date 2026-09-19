@@ -43,7 +43,7 @@ export default function ImpactCalculatorPage() {
   useEffect(() => {
     fetch('/api/auth/me')
       .then((r) => r.json())
-      .then((d) => setReadOnly(d.user?.role === 'viewer'));
+      .then((d) => setReadOnly(d.user?.role === 'intern'));
   }, []);
 
   const outputs: ImpactOutputs = useMemo(() => calculateImpact(inputs), [inputs]);

@@ -59,7 +59,7 @@ export const COMPLIANCE_LABELS: Record<string, string> = {
 
 export const PERSON_TYPES = ['intern', 'fte'] as const;
 
-export const ROLES_LIST = ['admin', 'mentor', 'viewer'] as const;
+export const ROLES_LIST = ['admin', 'mentor', 'intern'] as const;
 
 export const NAV_ITEMS = [
   { label: 'Dashboard', href: '/', icon: 'LayoutDashboard', phase: 5 },

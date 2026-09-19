@@ -42,7 +42,7 @@ export default function PipelineKanbanPage() {
   const [grouped, setGrouped] = useState<Record<string, Person[]>>({});
   const [funnel, setFunnel] = useState<FunnelData | null>(null);
   const [filters, setFilters] = useState<Filters>({ region: '', type: '', stage: '', risk: '' });
-  const [role, setRole] = useState('viewer');
+  const [role, setRole] = useState('intern');
   const [activePerson, setActivePerson] = useState<Person | null>(null);
   const [pendingTransition, setPendingTransition] = useState<{ personId: string; newStage: string; personName: string } | null>(null);
   const [showFunnel, setShowFunnel] = useState(true);
@@ -66,7 +66,7 @@ export default function PipelineKanbanPage() {
 
   useEffect(() => {
     fetchData();
-    fetch('/api/auth/me').then(r => r.json()).then(d => setRole(d.user?.role || 'viewer'));
+    fetch('/api/auth/me').then(r => r.json()).then(d => setRole(d.user?.role || 'intern'));
   }, [fetchData]);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -103,7 +103,7 @@ export default function PipelineKanbanPage() {
     fetchData();
   };
 
-  const isReadOnly = role === 'viewer';
+  const isReadOnly = role === 'intern';
 
   return (
     <div>

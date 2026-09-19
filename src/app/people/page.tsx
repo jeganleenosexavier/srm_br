@@ -26,7 +26,7 @@ export default function PeopleDirectoryPage() {
   const [filters, setFilters] = useState<Filters>({ region: '', type: '', stage: '', risk: '' });
   const [showForm, setShowForm] = useState(false);
   const [editPerson, setEditPerson] = useState<Person | null>(null);
-  const [role, setRole] = useState<string>('viewer');
+  const [role, setRole] = useState<string>('intern');
   const router = useRouter();
 
   const fetchPeople = useCallback(async () => {
@@ -44,7 +44,7 @@ export default function PeopleDirectoryPage() {
 
   useEffect(() => {
     fetchPeople();
-    fetch('/api/auth/me').then(r => r.json()).then(d => setRole(d.user?.role || 'viewer'));
+    fetch('/api/auth/me').then(r => r.json()).then(d => setRole(d.user?.role || 'intern'));
   }, [fetchPeople]);
 
   const handleDelete = async (id: string) => {

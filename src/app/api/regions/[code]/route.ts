@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { COUNTRIES } from '@/lib/constants';
 import { calculateBadge } from '@/services/compliance.service';
@@ -15,6 +16,13 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ code: string }> }
 ) {
+  const headersList = await headers();
+  const role = headersList.get('x-user-role');
+
+  if (role !== 'admin') {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
+
   const { code } = await params;
 
   const country = await prisma.country.findUnique({ where: { code } });

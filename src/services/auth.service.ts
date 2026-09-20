@@ -22,16 +22,17 @@ export async function authenticate(
   const token = await signToken({
     userId: user.id,
     role: user.role as AuthUser['role'],
+    personId: user.personId || null,
   });
 
   return {
     token,
-    user: { id: user.id, email: user.email, role: user.role as AuthUser['role'] },
+    user: { id: user.id, email: user.email, role: user.role as AuthUser['role'], personId: user.personId || null },
   };
 }
 
 export async function getUserById(id: string): Promise<AuthUser | null> {
   const user = await prisma.user.findUnique({ where: { id } });
   if (!user) return null;
-  return { id: user.id, email: user.email, role: user.role as AuthUser['role'] };
+  return { id: user.id, email: user.email, role: user.role as AuthUser['role'], personId: user.personId || null };
 }

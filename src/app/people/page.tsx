@@ -56,7 +56,7 @@ export default function PeopleDirectoryPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-2xl font-bold text-gray-800">People Directory</h2>
+        <h2 className="text-2xl font-bold text-gray-800">{role === 'mentor' ? 'My Interns' : 'People Directory'}</h2>
         {role === 'admin' && (
           <button
             onClick={() => { setEditPerson(null); setShowForm(true); }}

@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { canAccessPerson, canModifyPerson } from '@/lib/access';
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const headersList = await headers();
+  const role = headersList.get('x-user-role') || 'intern';
+  const userPersonId = headersList.get('x-user-person-id');
+
+  if (!(await canAccessPerson(role, userPersonId, id))) {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
 
   const person = await prisma.person.findUnique({
     where: { id },
@@ -40,8 +48,9 @@ export async function PUT(
   const { id } = await params;
   const headersList = await headers();
   const role = headersList.get('x-user-role');
+  const userPersonId = headersList.get('x-user-person-id');
 
-  if (role !== 'admin' && role !== 'mentor') {
+  if (!(await canModifyPerson(role || '', userPersonId, id))) {
     return NextResponse.json({ error: 'Access denied' }, { status: 403 });
   }
 

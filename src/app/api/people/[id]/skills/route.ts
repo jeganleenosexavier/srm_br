@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { canAccessPerson, canModifyPerson } from '@/lib/access';
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const headersList = await headers();
+  const role = headersList.get('x-user-role') || 'intern';
+  const userPersonId = headersList.get('x-user-person-id');
+
+  if (!(await canAccessPerson(role, userPersonId, id))) {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
 
   const skills = await prisma.personSkill.findMany({
     where: { personId: id },
@@ -37,7 +45,9 @@ export async function PUT(
   const headersList = await headers();
   const role = headersList.get('x-user-role');
 
-  if (role !== 'admin' && role !== 'mentor') {
+  const userPersonId = headersList.get('x-user-person-id');
+
+  if (!(await canModifyPerson(role || '', userPersonId, id))) {
     return NextResponse.json({ error: 'Access denied' }, { status: 403 });
   }
 

@@ -31,9 +31,11 @@ export interface AuthUser {
   id: string;
   email: string;
   role: UserRole;
+  personId?: string | null;
 }
 
 export interface JWTPayload {
   userId: string;
   role: UserRole;
+  personId?: string | null;
 }

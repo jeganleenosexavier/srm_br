@@ -34,12 +34,8 @@ export async function POST(request: Request) {
 
     // Mentors can only move their assigned people
     if (role === 'mentor') {
-      const mentorPeople = await prisma.person.findMany({
-        where: { mentorId: { not: null } },
-        select: { id: true, mentorId: true },
-      });
-      const isMentorFor = mentorPeople.some((p) => p.id === personId);
-      if (!isMentorFor) {
+      const userPersonId = headersList.get('x-user-person-id');
+      if (!userPersonId || person.mentorId !== userPersonId) {
         return NextResponse.json({ error: 'Mentors can only move their assigned people' }, { status: 403 });
       }
     }

@@ -16,6 +16,9 @@ async function main() {
   await seedReviews(people);
   await seedStageHistories(people, users);
 
+  // Link user accounts to person records
+  await linkUsersToPeople(users, people);
+
   console.log('Seed complete:', {
     users: users.length,
     countries: countries.length,
@@ -229,11 +232,11 @@ async function seedPeople(projects: ProjectRecord[]) {
 
   // Assign mentors: FTEs mentor some interns
   const ftes = created.filter((p) => people[created.indexOf(p)].type === 'fte');
-  const interns = created.filter((p) => people[created.indexOf(p)].type === 'intern');
-  for (let i = 0; i < interns.length; i++) {
+  const internPersons = created.filter((p) => people[created.indexOf(p)].type === 'intern');
+  for (let i = 0; i < internPersons.length; i++) {
     const mentor = ftes[i % ftes.length];
     await prisma.person.update({
-      where: { id: interns[i].id },
+      where: { id: internPersons[i].id },
       data: { mentorId: mentor.id },
     });
   }
@@ -388,6 +391,26 @@ async function seedStageHistories(people: PersonRecord[], users: { id: string }[
         },
       });
     }
+  }
+}
+
+async function linkUsersToPeople(users: { id: string; email: string }[], people: { id: string }[]) {
+  // intern@beauroi.demo → Priya Sharma (index 0)
+  const internUser = users.find((u) => u.email === 'intern@beauroi.demo');
+  if (internUser) {
+    await prisma.user.update({
+      where: { id: internUser.id },
+      data: { personId: people[0].id },
+    });
+  }
+
+  // mentor@beauroi.demo → Ravi Kumar (index 3)
+  const mentorUser = users.find((u) => u.email === 'mentor@beauroi.demo');
+  if (mentorUser) {
+    await prisma.user.update({
+      where: { id: mentorUser.id },
+      data: { personId: people[3].id },
+    });
   }
 }
 

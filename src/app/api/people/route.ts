@@ -3,6 +3,14 @@ import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: Request) {
+  const headersList = await headers();
+  const role = headersList.get('x-user-role');
+  const userPersonId = headersList.get('x-user-person-id');
+
+  if (role === 'intern') {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const region = searchParams.get('region');
   const type = searchParams.get('type');
@@ -20,6 +28,23 @@ export async function GET(request: Request) {
       { name: { contains: search } },
       { email: { contains: search } },
     ];
+  }
+
+  // Mentor: scope to assigned interns + self
+  if (role === 'mentor' && userPersonId) {
+    where.OR = [
+      { mentorId: userPersonId },
+      { id: userPersonId },
+      ...(search ? [{ name: { contains: search } }, { email: { contains: search } }] : []),
+    ];
+    // If search was set via OR above, remove it to avoid conflict
+    if (search) {
+      where.AND = [
+        { OR: [{ mentorId: userPersonId }, { id: userPersonId }] },
+        { OR: [{ name: { contains: search } }, { email: { contains: search } }] },
+      ];
+      delete where.OR;
+    }
   }
 
   const people = await prisma.person.findMany({

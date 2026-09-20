@@ -80,7 +80,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--bg-secondary)]">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} role={user.role} personId={user.personId} />
       <TopBar user={user} sidebarCollapsed={sidebarCollapsed} />
       <main className={`flex-1 mt-14 p-6 transition-all duration-200 ${
         sidebarCollapsed ? 'ml-16' : 'ml-60'

@@ -19,6 +19,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     return {
       userId: payload.userId as string,
       role: payload.role as JWTPayload['role'],
+      personId: (payload.personId as string) || null,
     };
   } catch {
     return null;

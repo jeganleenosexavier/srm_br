@@ -4,6 +4,28 @@ import { verifyToken } from '@/lib/jwt';
 
 const PUBLIC_PATHS = ['/login', '/api/auth/login'];
 
+const INTERN_BLOCKED_PAGES = [
+  '/pipeline',
+  '/people',
+  '/compliance',
+  '/regions',
+  '/impact',
+  '/reports',
+  '/settings',
+];
+
+const MENTOR_BLOCKED_PAGES = [
+  '/compliance',
+  '/regions',
+  '/impact',
+  '/reports',
+  '/settings',
+];
+
+function isBlockedPage(pathname: string, blockedPaths: string[]): boolean {
+  return blockedPaths.some((p) => pathname === p || pathname.startsWith(p + '/'));
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -35,9 +57,38 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  const { role } = payload;
+
+  // Block restricted page routes for intern
+  if (role === 'intern' && !pathname.startsWith('/api/')) {
+    // Allow /people/[id] only if it matches their own personId
+    if (pathname.startsWith('/people/') && payload.personId) {
+      const personIdFromUrl = pathname.split('/')[2];
+      if (personIdFromUrl && personIdFromUrl !== payload.personId) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+    } else if (isBlockedPage(pathname, INTERN_BLOCKED_PAGES)) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
+  // Block restricted page routes for mentor
+  // Note: /compliance/alerts is allowed for mentor (scoped), but /compliance (overview) is blocked
+  if (role === 'mentor' && !pathname.startsWith('/api/')) {
+    if (pathname === '/compliance' || (pathname.startsWith('/compliance') && !pathname.startsWith('/compliance/alerts'))) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    if (isBlockedPage(pathname, MENTOR_BLOCKED_PAGES.filter(p => p !== '/compliance'))) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', payload.userId);
   requestHeaders.set('x-user-role', payload.role);
+  if (payload.personId) {
+    requestHeaders.set('x-user-person-id', payload.personId);
+  }
 
   return NextResponse.next({
     request: { headers: requestHeaders },

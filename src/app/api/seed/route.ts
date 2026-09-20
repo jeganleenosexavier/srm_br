@@ -27,15 +27,16 @@ export async function POST() {
     await prisma.user.deleteMany();
 
     // Users
-    const users = [];
+    const users: { id: string; email: string }[] = [];
     for (const a of [
       { email: 'admin@beauroi.demo', password: 'admin123', role: 'admin' },
       { email: 'mentor@beauroi.demo', password: 'mentor123', role: 'mentor' },
       { email: 'intern@beauroi.demo', password: 'intern123', role: 'intern' },
     ]) {
-      users.push(await prisma.user.create({
+      const u = await prisma.user.create({
         data: { email: a.email, passwordHash: await bcrypt.hash(a.password, 10), role: a.role },
-      }));
+      });
+      users.push({ id: u.id, email: u.email });
     }
 
     // Countries
@@ -235,6 +236,24 @@ export async function POST() {
           data: { personId: people[i].id, stage: stageOrder[j], timestamp: daysAgo(age), userId: users[0].id },
         });
       }
+    }
+
+    // Link user accounts to person records
+    // intern@beauroi.demo → Priya Sharma (index 0)
+    const internUser = users.find((u) => u.email === 'intern@beauroi.demo');
+    if (internUser) {
+      await prisma.user.update({
+        where: { id: internUser.id },
+        data: { personId: people[0].id },
+      });
+    }
+    // mentor@beauroi.demo → Ravi Kumar (index 3)
+    const mentorUser = users.find((u) => u.email === 'mentor@beauroi.demo');
+    if (mentorUser) {
+      await prisma.user.update({
+        where: { id: mentorUser.id },
+        data: { personId: people[3].id },
+      });
     }
 
     // Recalculate risk levels based on live signals

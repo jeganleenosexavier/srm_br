@@ -9,9 +9,12 @@ import {
 import StatusBadge from '@/components/shared/StatusBadge';
 import ErrorBanner from '@/components/ui/ErrorBanner';
 import { SkeletonGrid } from '@/components/ui/SkeletonLoader';
-import { COUNTRIES } from '@/lib/constants';
+import { COUNTRIES, STAGE_LABELS } from '@/lib/constants';
 
-interface DashboardData {
+/* ────────────────────────────── Types ────────────────────────────── */
+
+interface AdminDashboardData {
+  type: 'admin';
   kpis: {
     activeInterns: number;
     fteCount: number;
@@ -33,6 +36,46 @@ interface DashboardData {
     riskLevel: string; topSignal: string;
   }[];
 }
+
+interface InternDashboardData {
+  type: 'intern';
+  person: {
+    id: string; name: string; email: string; region: string;
+    stage: string; stageLabel: string;
+    stageProgress: { current: number; total: number };
+    riskLevel: string; complianceStatus: string;
+  };
+  mentor: { id: string; name: string; email: string } | null;
+  project: { id: string; name: string; domain: string } | null;
+  skills: { name: string; category: string; proficiency: string }[];
+  latestReviews: {
+    id: string; date: string;
+    technical: number | null; communication: number | null; learningAgility: number | null;
+    notes: string; recommendation: string | null;
+    mentor: { id: string; name: string };
+  }[];
+}
+
+interface MentorDashboardData {
+  type: 'mentor';
+  mentor: {
+    id: string; name: string; region: string;
+    stage: string; stageLabel: string; complianceStatus: string;
+  };
+  interns: {
+    id: string; name: string; region: string;
+    stage: string; stageLabel: string;
+    riskLevel: string; complianceStatus: string;
+    project: string | null; daysSinceReview: number | null; needsReview: boolean;
+  }[];
+  internsNeedingReview: number;
+  atRiskInterns: number;
+  teamSkills: { name: string; count: number }[];
+}
+
+type DashboardData = AdminDashboardData | InternDashboardData | MentorDashboardData;
+
+/* ────────────────────────────── Page ────────────────────────────── */
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -74,6 +117,244 @@ export default function DashboardPage() {
 
   if (!data) return null;
 
+  if (data.type === 'intern') return <InternDashboard data={data} router={router} />;
+  if (data.type === 'mentor') return <MentorDashboard data={data} router={router} />;
+  return <AdminDashboard data={data} router={router} />;
+}
+
+/* ────────────────────── Intern Dashboard ────────────────────── */
+
+function InternDashboard({ data, router }: { data: InternDashboardData; router: ReturnType<typeof useRouter> }) {
+  const { person, mentor, project, skills, latestReviews } = data;
+
+  const PROFICIENCY_COLORS: Record<string, string> = {
+    beginner: 'bg-gray-100 text-gray-700',
+    intermediate: 'bg-blue-100 text-blue-700',
+    advanced: 'bg-purple-100 text-purple-700',
+    expert: 'bg-emerald-100 text-emerald-700',
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-1">My Dashboard</h2>
+      <p className="text-sm text-gray-500 mb-5">Welcome, {person.name}</p>
+
+      {/* Top cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Pipeline Stage */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-amber-400" />
+            <h3 className="text-sm font-semibold text-gray-700">Pipeline Stage</h3>
+          </div>
+          <p className="text-xl font-bold text-gray-800">{person.stageLabel}</p>
+          <div className="mt-2">
+            <div className="w-full bg-gray-100 rounded-full h-2">
+              <div
+                className="bg-[var(--primary)] h-2 rounded-full transition-all"
+                style={{ width: `${(person.stageProgress.current / person.stageProgress.total) * 100}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-gray-500 mt-1">Step {person.stageProgress.current} of {person.stageProgress.total}</p>
+          </div>
+        </div>
+
+        {/* Compliance */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`w-2 h-2 rounded-full ${person.complianceStatus === 'green' ? 'bg-green-500' : person.complianceStatus === 'amber' ? 'bg-amber-500' : 'bg-red-500'}`} />
+            <h3 className="text-sm font-semibold text-gray-700">Compliance</h3>
+          </div>
+          <StatusBadge level={person.complianceStatus as 'green' | 'amber' | 'red'} label={person.complianceStatus === 'green' ? 'All Complete' : 'Action Needed'} />
+        </div>
+
+        {/* Mentor */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-blue-500" />
+            <h3 className="text-sm font-semibold text-gray-700">Your Mentor</h3>
+          </div>
+          {mentor ? (
+            <div>
+              <p className="text-sm font-medium text-gray-800">{mentor.name}</p>
+              <p className="text-[11px] text-gray-500">{mentor.email}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">Not assigned</p>
+          )}
+        </div>
+
+        {/* Project */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-purple-500" />
+            <h3 className="text-sm font-semibold text-gray-700">Current Project</h3>
+          </div>
+          {project ? (
+            <div>
+              <p className="text-sm font-medium text-gray-800">{project.name}</p>
+              <p className="text-[11px] text-gray-500">{project.domain}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">Not assigned</p>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom: Skills + Reviews */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Skills */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Your Skills</h3>
+          {skills.length === 0 ? (
+            <p className="text-sm text-gray-400">No skills recorded yet</p>
+          ) : (
+            <div className="space-y-2">
+              {skills.map((s) => (
+                <div key={s.name} className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-medium text-gray-800">{s.name}</span>
+                    <span className="text-[10px] text-gray-400 ml-2">{s.category}</span>
+                  </div>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full ${PROFICIENCY_COLORS[s.proficiency] || 'bg-gray-100'}`}>
+                    {s.proficiency.charAt(0).toUpperCase() + s.proficiency.slice(1)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Latest Reviews */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Latest Reviews</h3>
+          {latestReviews.length === 0 ? (
+            <p className="text-sm text-gray-400">No reviews yet</p>
+          ) : (
+            <div className="space-y-3">
+              {latestReviews.map((r) => (
+                <div key={r.id} className="border border-gray-100 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] text-gray-500">{new Date(r.date).toLocaleDateString()}</span>
+                    {r.recommendation && (
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                        r.recommendation === 'recommend_fte' ? 'bg-green-100 text-green-700' :
+                        r.recommendation === 'extend' ? 'bg-amber-100 text-amber-700' :
+                        'bg-red-100 text-red-700'
+                      }`}>
+                        {r.recommendation === 'recommend_fte' ? 'Recommend FTE' : r.recommendation === 'extend' ? 'Extend' : 'Exit'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700">{r.notes}</p>
+                  <p className="text-[10px] text-gray-400 mt-1">by {r.mentor.name}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────── Mentor Dashboard ────────────────────── */
+
+function MentorDashboard({ data, router }: { data: MentorDashboardData; router: ReturnType<typeof useRouter> }) {
+  const { mentor: mentorInfo, interns, internsNeedingReview, atRiskInterns, teamSkills } = data;
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-1">Team Dashboard</h2>
+      <p className="text-sm text-gray-500 mb-5">Welcome, {mentorInfo.name}</p>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="w-2 h-2 rounded-full bg-blue-500 mb-2" />
+          <p className="text-2xl font-bold text-gray-800">{interns.length}</p>
+          <p className="text-xs text-gray-500">Assigned Interns</p>
+        </div>
+        <div className={`bg-white rounded-xl border border-gray-200 p-4 ${internsNeedingReview > 0 ? 'ring-2 ring-amber-200' : ''}`}>
+          <div className="w-2 h-2 rounded-full bg-amber-500 mb-2" />
+          <p className="text-2xl font-bold text-gray-800">{internsNeedingReview}</p>
+          <p className="text-xs text-gray-500">Need Review</p>
+        </div>
+        <div className={`bg-white rounded-xl border border-gray-200 p-4 ${atRiskInterns > 0 ? 'ring-2 ring-red-200' : ''}`}>
+          <div className="w-2 h-2 rounded-full bg-red-500 mb-2" />
+          <p className="text-2xl font-bold text-gray-800">{atRiskInterns}</p>
+          <p className="text-xs text-gray-500">At Risk</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className={`w-2 h-2 rounded-full ${mentorInfo.complianceStatus === 'green' ? 'bg-green-500' : 'bg-amber-500'} mb-2`} />
+          <StatusBadge level={mentorInfo.complianceStatus as 'green' | 'amber' | 'red'} label="Your Compliance" size="sm" />
+        </div>
+      </div>
+
+      {/* Interns list + Team skills */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Interns */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-700">My Interns</h3>
+            <button onClick={() => router.push('/people')} className="text-xs text-[#1e3a5f] hover:underline">
+              View all
+            </button>
+          </div>
+          {interns.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">No assigned interns</p>
+          ) : (
+            <div className="space-y-2">
+              {interns.map((intern) => (
+                <button
+                  key={intern.id}
+                  onClick={() => router.push(`/people/${intern.id}`)}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left border border-gray-100"
+                >
+                  <StatusBadge level={intern.riskLevel as 'green' | 'amber' | 'red'} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">{intern.name}</p>
+                    <div className="flex gap-2 mt-0.5">
+                      <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{intern.stageLabel}</span>
+                      {intern.project && <span className="text-[10px] text-gray-400">{intern.project}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {intern.needsReview && (
+                      <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Needs Review</span>
+                    )}
+                    <StatusBadge level={intern.complianceStatus as 'green' | 'amber' | 'red'} size="sm" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Team Skills */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">Team Skills Snapshot</h3>
+          {teamSkills.length === 0 ? (
+            <p className="text-sm text-gray-400">No skill data</p>
+          ) : (
+            <div className="space-y-2">
+              {teamSkills.map((s) => (
+                <div key={s.name} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-700">{s.name}</span>
+                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{s.count} intern{s.count > 1 ? 's' : ''}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ────────────────────── Admin Dashboard ────────────────────── */
+
+function AdminDashboard({ data, router }: { data: AdminDashboardData; router: ReturnType<typeof useRouter> }) {
   const kpiCards = [
     { label: 'Active Interns', value: data.kpis.activeInterns, href: '/pipeline', color: 'bg-blue-500' },
     { label: 'FTE Count', value: data.kpis.fteCount, href: '/people?type=fte', color: 'bg-purple-500' },
@@ -106,7 +387,6 @@ export default function DashboardPage() {
 
       {/* Middle row: Funnel + Regional Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
-        {/* Pipeline Funnel */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Pipeline Funnel</h3>
           <ResponsiveContainer width="100%" height={240}>
@@ -120,7 +400,6 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* Regional Breakdown */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Regional Breakdown</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -160,7 +439,6 @@ export default function DashboardPage() {
 
       {/* Bottom row: Retention Trend + At-Risk Queue */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Retention Trend */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Retention Trend</h3>
           <ResponsiveContainer width="100%" height={220}>
@@ -177,7 +455,6 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </div>
 
-        {/* At-Risk Queue */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-700">At-Risk Queue</h3>

@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { canAccessPerson, canModifyPerson } from '@/lib/access';
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const headersList = await headers();
+  const role = headersList.get('x-user-role') || 'intern';
+  const userPersonId = headersList.get('x-user-person-id');
+
+  if (!(await canAccessPerson(role, userPersonId, id))) {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
 
   const reviews = await prisma.review.findMany({
     where: { personId: id },
@@ -25,22 +33,19 @@ export async function POST(
   const headersList = await headers();
   const role = headersList.get('x-user-role');
   const userId = headersList.get('x-user-id')!;
+  const userPersonId = headersList.get('x-user-person-id');
 
-  if (role !== 'admin' && role !== 'mentor') {
+  if (!(await canModifyPerson(role || '', userPersonId, id))) {
     return NextResponse.json({ error: 'Access denied' }, { status: 403 });
   }
 
   try {
     const body = await request.json();
 
-    // For mentor role, find the person record linked to this user to act as mentor
-    // For admin, use the first available FTE or the person themselves
+    // Use the mentor's actual personId from the JWT instead of finding "first FTE"
     let mentorPersonId: string;
-    if (role === 'mentor') {
-      const mentorPerson = await prisma.person.findFirst({
-        where: { type: 'fte' },
-      });
-      mentorPersonId = mentorPerson?.id || id;
+    if (role === 'mentor' && userPersonId) {
+      mentorPersonId = userPersonId;
     } else {
       mentorPersonId = body.mentorId || id;
     }

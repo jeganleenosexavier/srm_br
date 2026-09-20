@@ -12,8 +12,10 @@ model User {
   email        String   @unique
   passwordHash String   @map("password_hash")
   role         String   @default("intern")
+  personId     String?  @unique @map("person_id")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  person         Person?        @relation(fields: [personId], references: [id])
   stageHistories StageHistory[]
 
   @@map("users")
@@ -48,6 +50,7 @@ model Person {
   reviewsGiven    Review[]        @relation("ReviewMentor")
   complianceItems ComplianceItem[]
   stageHistories  StageHistory[]
+  userAccount     User?
 
   @@map("persons")
 }

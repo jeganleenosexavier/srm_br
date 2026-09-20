@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { COUNTRIES } from '@/lib/constants';
 import { calculateBadge } from '@/services/compliance.service';
@@ -12,6 +13,13 @@ const HUB_ROLES: Record<string, string> = {
 };
 
 export async function GET() {
+  const headersList = await headers();
+  const role = headersList.get('x-user-role');
+
+  if (role !== 'admin') {
+    return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+  }
+
   const countries = await prisma.country.findMany();
   const people = await prisma.person.findMany({
     include: {

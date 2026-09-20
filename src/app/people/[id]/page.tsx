@@ -77,9 +77,14 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
 
   const fetchPerson = useCallback(async () => {
     const res = await fetch(`/api/people/${id}`);
-    if (res.ok) setPerson(await res.json());
+    if (res.ok) {
+      setPerson(await res.json());
+    } else if (res.status === 403) {
+      router.push('/');
+      return;
+    }
     setLoading(false);
-  }, [id]);
+  }, [id, router]);
 
   const fetchRisk = useCallback(async () => {
     const res = await fetch(`/api/people/${id}/risk`);
@@ -140,9 +145,9 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
 
   return (
     <div>
-      <button onClick={() => router.push('/people')} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">
+      <button onClick={() => router.push(role === 'intern' ? '/' : '/people')} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-        Back to People
+        {role === 'intern' ? 'Back to Dashboard' : role === 'mentor' ? 'Back to My Interns' : 'Back to People'}
       </button>
 
       <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">

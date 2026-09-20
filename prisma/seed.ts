@@ -19,6 +19,9 @@ async function main() {
   // Link user accounts to person records
   await linkUsersToPeople(users, people);
 
+  // LMS Enrollments
+  await seedEnrollments(people);
+
   console.log('Seed complete:', {
     users: users.length,
     countries: countries.length,
@@ -34,6 +37,7 @@ async function clearAll() {
   await prisma.review.deleteMany();
   await prisma.complianceItem.deleteMany();
   await prisma.personSkill.deleteMany();
+  await prisma.enrollment.deleteMany();
   await prisma.roleSkill.deleteMany();
   await prisma.role.deleteMany();
   await prisma.person.deleteMany();
@@ -410,6 +414,29 @@ async function linkUsersToPeople(users: { id: string; email: string }[], people:
     await prisma.user.update({
       where: { id: mentorUser.id },
       data: { personId: people[3].id },
+    });
+  }
+}
+
+async function seedEnrollments(people: PersonRecord[]) {
+  const enrollData = [
+    { pIdx: 0, courseId: 'gcp-associate', status: 'in_progress', progress: 45 },
+    { pIdx: 0, courseId: 'python-data', status: 'completed', progress: 100 },
+    { pIdx: 2, courseId: 'react-advanced', status: 'enrolled', progress: 0 },
+    { pIdx: 7, courseId: 'python-data', status: 'in_progress', progress: 30 },
+    { pIdx: 8, courseId: 'gcp-associate', status: 'completed', progress: 100 },
+    { pIdx: 8, courseId: 'ml-foundations', status: 'in_progress', progress: 60 },
+    { pIdx: 3, courseId: 'terraform-iac', status: 'completed', progress: 100 },
+    { pIdx: 3, courseId: 'aws-fundamentals', status: 'in_progress', progress: 70 },
+  ];
+  for (const e of enrollData) {
+    await prisma.enrollment.create({
+      data: {
+        personId: people[e.pIdx].id,
+        courseId: e.courseId,
+        status: e.status,
+        progress: e.progress,
+      },
     });
   }
 }

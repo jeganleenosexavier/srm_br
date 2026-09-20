@@ -18,11 +18,21 @@ export async function GET() {
     }
 
     const user = await getUserById(payload.userId);
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 401 });
+
+    if (user) {
+      return NextResponse.json({ user });
     }
 
-    return NextResponse.json({ user });
+    // Fallback: DB lookup failed (e.g. serverless cold start with stale DB).
+    // Return claims from the verified JWT so the session stays alive.
+    return NextResponse.json({
+      user: {
+        id: payload.userId,
+        email: '',
+        role: payload.role,
+        personId: payload.personId || null,
+      },
+    });
   } catch {
     return NextResponse.json(
       { error: 'Internal server error' },

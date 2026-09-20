@@ -95,6 +95,7 @@ export const NAV_ITEMS: NavItem[] = [
       { label: 'Alerts', href: '/compliance/alerts', phase: 3, hideForRoles: ['intern'] },
     ],
   },
+  { label: 'Learning', href: '/lms', icon: 'GraduationCap', phase: 7, hideForRoles: ['admin'] },
   { label: 'Regions', href: '/regions', icon: 'Globe', phase: 4, hideForRoles: ['intern', 'mentor'] },
   { label: 'Impact', href: '/impact', icon: 'TrendingUp', phase: 4, hideForRoles: ['intern', 'mentor'] },
   { label: 'Reports', href: '/reports', icon: 'FileText', phase: 6, hideForRoles: ['intern', 'mentor'] },

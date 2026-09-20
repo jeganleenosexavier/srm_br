@@ -49,6 +49,7 @@ model Person {
   reviewsReceived Review[]        @relation("ReviewSubject")
   reviewsGiven    Review[]        @relation("ReviewMentor")
   complianceItems ComplianceItem[]
+  enrollments     Enrollment[]
   stageHistories  StageHistory[]
   userAccount     User?
 
@@ -172,4 +173,18 @@ model StageHistory {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("stage_histories")
+}
+
+model Enrollment {
+  id         String   @id @default(cuid())
+  personId   String   @map("person_id")
+  courseId    String   @map("course_id")
+  status     String   @default("enrolled")
+  enrolledAt DateTime @default(now()) @map("enrolled_at")
+  progress   Int      @default(0)
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, courseId])
+  @@map("enrollments")
 }

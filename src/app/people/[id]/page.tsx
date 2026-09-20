@@ -6,6 +6,7 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import SkillsTab from '@/components/people/SkillsTab';
 import ComplianceTab from '@/components/people/ComplianceTab';
+import LearningTab from '@/components/people/LearningTab';
 import { STAGES, STAGE_LABELS, COUNTRIES } from '@/lib/constants';
 
 interface RiskSignal {
@@ -67,6 +68,7 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
   const [activeTab, setActiveTab] = useState('pipeline');
   const [role, setRole] = useState('intern');
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [userPersonId, setUserPersonId] = useState<string | null>(null);
   const [stageConfirm, setStageConfirm] = useState<string | null>(null);
   const [exitReasonModal, setExitReasonModal] = useState(false);
   const [exitReason, setExitReason] = useState('');
@@ -104,7 +106,7 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
   useEffect(() => {
     fetchPerson();
     fetchRisk();
-    fetch('/api/auth/me').then(r => r.json()).then(d => setRole(d.user?.role || 'intern'));
+    fetch('/api/auth/me').then(r => r.json()).then(d => { setRole(d.user?.role || 'intern'); setUserPersonId(d.user?.personId || null); });
   }, [fetchPerson, fetchRisk]);
 
   const handleStageChange = async (newStage: string, reason?: string) => {
@@ -140,6 +142,7 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
   const tabs = [
     { key: 'pipeline', label: 'Pipeline' },
     { key: 'skills', label: 'Skills' },
+    { key: 'learning', label: 'Learning' },
     { key: 'compliance', label: 'Compliance' },
   ];
 
@@ -244,6 +247,9 @@ export default function PersonDetailPage({ params }: { params: Promise<{ id: str
       )}
       {activeTab === 'compliance' && (
         <ComplianceTab personId={id} isAdmin={role === 'admin'} />
+      )}
+      {activeTab === 'learning' && (
+        <LearningTab personId={id} isSelf={userPersonId === id} />
       )}
 
       {stageConfirm && (
